@@ -16,6 +16,7 @@ type(Match) :: m
 character(:), allocatable :: pattern
 
 pattern = "([+-]{1}?[0-9]+[.]?[0-9]+)([+-]{1}[0-9]+[.]?[0-9]+)i"
+call re % compile(pattern)
 m = re % match("-2.5+5.5i")
 if (m % matches) then
     print*, "Entire Match: ", m % group(0)
