@@ -21,10 +21,10 @@ program simple_example
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, "Entire Match: ", re % group(1) ! 1/sin(x)
-        print*, "First Group: ",  re % group(2)
-        print*, "Second Group: ", re % group(3)
-        print*, "Third Group: ",  re % group(4)
+        print*, "Entire Match: ", re % group(0) ! 1/sin(x)
+        print*, "First Group: ",  re % group(1)
+        print*, "Second Group: ", re % group(2)
+        print*, "Third Group: ",  re % group(3)
     end if
 end program
 ```

@@ -150,7 +150,7 @@ contains
         class(regex_t) :: self
         character(:),allocatable :: buff
         integer :: id
-        buff = self % groups(id) % content
+        buff = self % groups(id+1) % content
     end function
 
     function full_info(self, extra, what, where) result(error)
