@@ -1,3 +1,7 @@
+| :warning: WARNING          |
+|:---------------------------|
+| Still not working properly, I'm planning add support to FPM as well |
+
 # FRegex
 ## Yet another PCRE wrapper to fortran
 This project aims to provide a good suport for Regex just like other 
