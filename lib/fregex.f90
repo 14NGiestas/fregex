@@ -2,17 +2,23 @@ module fregex
     use, intrinsic :: iso_c_binding
     use, intrinsic :: iso_fortran_env
     use pcre_constants
-    use fmatch
     implicit none
-    integer, parameter :: STDERR = 4
+    private
 
-    type Regex
+    type group_t
+        character(:), allocatable :: content
+    end type
+
+    type, public :: regex_t
         type(C_ptr) :: pcre_ptr
+        type(group_t), allocatable :: groups(:)
+        logical :: matches = .false.
     contains
-        procedure :: fullinfo => fregex_fullinfo
-        procedure :: compile  => fregex_compile
-        procedure :: match    => fregex_match
-        procedure :: free     => fregex_free
+        procedure :: full_info
+        procedure :: group
+        procedure :: compile
+        procedure :: match
+        procedure :: free
     end type
 
     interface
@@ -56,46 +62,18 @@ module fregex
             integer(c_int), value, intent(in) :: what
             type(c_ptr), intent(out) :: where
             integer(c_int) :: error
-        end function 
+        end function
 
         subroutine c_pcre_free(code) bind(C, name="pcre_free")
             import
             type(c_ptr) :: code
         end subroutine c_pcre_free
     end interface
+
 contains
 
-    subroutine check_pcre_error(error)
-        integer, intent(in) :: error
-        if (error < 0) then
-            select case(error)
-            case (0)
-                print*, "Vector Overflow."
-                stop
-            case (PCRE_ERROR_NOMATCH)
-                print*,"No match."
-            case (PCRE_ERROR_NULL)
-                print*, "PCRE_PTR is null."
-                stop
-            case (PCRE_ERROR_BADOPTION)
-                print*, "Bad option."
-                stop
-            case (PCRE_ERROR_BADMAGIC)
-                print*, "Bad magic."
-                stop
-            case (PCRE_ERROR_UNKNOWN_OPCODE)
-                print*, "Unknown OpCode"
-                stop
-            case default
-                print*,"Matching error ", error
-                stop
-            end select
-        end if
-    end subroutine
-
-    subroutine fregex_compile(self, pattern, flags)
-        implicit none
-        class(Regex) :: self
+    subroutine compile(self, pattern, flags)
+        class(regex_t) :: self
         character(*), intent(in) :: pattern
         character(len=len(pattern)+1, kind=c_char) :: c_pattern
         type(C_ptr) :: c_error_msg
@@ -111,57 +89,86 @@ contains
         self % pcre_ptr = c_pcre_compile(c_pattern, flags_, c_error_msg, &
         &                       error_offset, c_null_ptr)
 
-        if (.not. C_associated(self % pcre_ptr)) then
+        if (.not. c_associated(self % pcre_ptr)) then
             stop
         end if
     end subroutine
 
-    function fregex_match(self, string, flags, extra) result(res_match)
-        implicit none
-        class(Regex) :: self
+    subroutine match(self, string, flags, extra, info)
+        class(regex_t) :: self
 
         character(*) :: string
-        character(len=len(string)+1, kind=C_char) :: C_string
-
-        type(Match) :: res_match
+        character(len=len(string)+1, kind=c_char) :: c_string
         integer :: start_offset = 0
 
         integer, parameter :: max_size = 30
         integer :: ovector(0:max_size-1)
         integer :: ret_code
 
-        integer               :: flags_ = PCRE_CONFIG_UTF8
-        type(C_ptr)           :: extra_ = C_NULL_PTR
         integer, optional     :: flags
-        type(C_ptr), optional :: extra 
+        integer               :: flags_ = pcre_config_utf8
+        type(c_ptr), optional :: extra
+        type(c_ptr)           :: extra_ = c_null_ptr
+        integer, optional     :: info
+        integer :: i, start, ending, num_groups
 
         if (present(flags)) flags_ = flags
         if (present(extra)) extra_ = extra
 
         ! C - Strings must be null terminated
-        C_string = string // C_null_char
+        c_string = string // c_null_char
         ret_code = c_pcre_exec(self % pcre_ptr, extra_, &
         &                      C_string, len(string),   &
         &                      start_offset, flags_,    &
         &                      ovector, size(ovector))
 
-        call check_pcre_error(ret_code)
-        res_match = Match_(string, vector=ovector, num_groups=ret_code)
+        self % matches = .false.
+
+        if (ret_code < 0) then
+            if (present(info)) then
+                info = ret_code
+                return
+            else
+                error stop ret_code
+            end if
+        end if
+
+        num_groups = ret_code
+
+        if (allocated(self % groups)) deallocate(self % groups)
+        allocate(self % groups(num_groups))
+
+        do i = 1, num_groups-1
+            start  = ovector(2*i) + 1
+            ending = ovector(2*i + 1)
+            self % groups(i) % content = string(start:ending)
+        end do
+        self % matches = .true.
+    end subroutine
+
+    function group(self, id) result(buff)
+        class(regex_t) :: self
+        character(:),allocatable :: buff
+        integer :: id
+        buff = self % groups(id) % content
     end function
 
-    function fregex_fullinfo(self, extra, what, where) result(error)
-        implicit none
-        class(Regex) :: self
-        type(C_ptr), intent(in) :: extra
+    function full_info(self, extra, what, where) result(error)
+        class(regex_t) :: self
+        type(c_ptr), intent(in) :: extra
         integer(C_int), intent(in) :: what
         type(C_ptr), intent(out) :: where
         integer(C_int) :: error
         error = c_pcre_fullinfo(self % pcre_ptr, extra, what, where)
     end function
 
-    subroutine fregex_free(self)
-        implicit none
-        class(Regex) :: self
+    subroutine free(self)
+        class(regex_t) :: self
+        integer :: i
         call c_pcre_free(self % pcre_ptr)
+        do i=1,size(self % groups)
+            deallocate(self % groups(i) % content)
+        end do
+        deallocate(self % groups)
     end subroutine
 end module

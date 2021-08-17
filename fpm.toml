@@ -1,0 +1,11 @@
+name    = "Fregex"
+version = "0.0.1"
+author  = "Ian Giestas Pauli"
+maintainer = "iangiestas@usp.br"
+
+[library]
+source-dir = "lib"
+include-dir = "inc"
+
+[ build ]
+link = [ "pcre" ]
