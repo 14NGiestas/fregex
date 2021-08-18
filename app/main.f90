@@ -15,10 +15,9 @@ program simple_example
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, "Entire Match: ", re % group(0) ! 1/sin(x)
-        print*, "First Group: ",  re % group(1)
-        print*, "Second Group: ", re % group(2)
-        print*, "Third Group: ",  re % group(3)
+        print*, 1, re % group(1) ! 1
+        print*, 2, re % group(2) ! /
+        print*, 3, re % group(3) ! sin(x)
     end if
 
     string = "-1/sqrt(2)"
@@ -26,10 +25,9 @@ program simple_example
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, re % group(0) ! 1/sqrt(2)
-        print*, re % group(1) ! 1
-        print*, re % group(2) ! /
-        print*, re % group(3) ! sqrt(2)
+        print*, 1, re % group(1) ! -1
+        print*, 2, re % group(2) ! /
+        print*, 3, re % group(3) ! sqrt(2)
     end if
 
     ! Math functions
@@ -40,12 +38,13 @@ program simple_example
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, re % group(0) ! sqrt(2)
-        print*, re % group(1) ! sqrt
-        print*, re % group(2) ! 2
+        print*, 1, re % group(1) ! sqrt
+        print*, 2, re % group(2) ! 1/2
     end if
+
     string = "Sqrt(2)"
     call re % match(string)
+
     string = "SQRT(3)"
     call re % match(string)
 
@@ -57,27 +56,24 @@ program simple_example
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, re % group(0)
-        print*, re % group(1)
-        print*, re % group(2)
+        print*, 1, re % group(1) ! 2.5
+        print*, 2, re % group(2) !+7.5
     end if
     string = "5+5j"
     call re % match(string)
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, re % group(0) ! Sqrt(2)
-        print*, re % group(1) ! Sqrt
-        print*, re % group(2) ! 2
+        print*, 1, re % group(1) ! 5
+        print*, 2, re % group(2) !+5
     end if
     string = "4.33-5.66j"
     call re % match(string)
     if (re % matches) then
         print*, "string: ", string
         print*, "pattern: ", pattern
-        print*, re % group(0) ! Sqrt(2)
-        print*, re % group(1) ! Sqrt
-        print*, re % group(2) ! 2
+        print*, 1, re % group(1) ! 4.33
+        print*, 2, re % group(2) !-5.66
     end if
 
     ! It is a complex number (it shouldn't match with this specific pattern)
