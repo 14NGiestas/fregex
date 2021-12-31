@@ -123,13 +123,13 @@ contains
         &                      ovector, size(ovector))
 
         self % matches = .false.
-
         if (ret_code < 0) then
             if (present(info)) then
                 info = ret_code
                 return
             else
-                error stop ret_code
+                if (ret_code < -1) error stop ret_code
+                return
             end if
         end if
 

@@ -77,6 +77,6 @@ program simple_example
     end if
 
     ! It is a complex number (it shouldn't match with this specific pattern)
-    call re % match("10j", info=info)
-    print*, re % matches, info
+    call re % match("10j")
+    print*, re % matches
 end program
