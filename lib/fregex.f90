@@ -124,10 +124,7 @@ contains
 
         self % matches = .false.
 
-        ! if info is not provided the code will 
-        ! be terminated if the ret_code is negative (error)
-        ! except if it's a PCRE_ERROR_NOMATCH
-        if (ret_code < -1) then
+        if (ret_code < 0) then
             if (present(info)) then
                 info = ret_code
                 return
