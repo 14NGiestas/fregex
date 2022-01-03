@@ -6,6 +6,8 @@ module fregex
     private
 
     type group_t
+        integer :: start
+        integer :: ending
         character(:), allocatable :: content
     end type
 
@@ -141,6 +143,8 @@ contains
         do i = 1, num_groups-1
             start  = ovector(2*i) + 1
             ending = ovector(2*i + 1)
+            self % groups(i) % start = start
+            self % groups(i) % ending = ending
             self % groups(i) % content = string(start:ending)
         end do
         self % matches = .true.
